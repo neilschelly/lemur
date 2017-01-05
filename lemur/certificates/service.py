@@ -349,41 +349,116 @@ def create_csr(**csr_config):
                 builder = builder.add_extension(
                     x509.SubjectAlternativeName(general_names), critical=True
                 )
+            if k == 'extended_key_usage':
+                usage_oids = []
+                for k2, v2 in v.items():
+                    if k2 == 'use_client_authentication':
+                        usage_oids.append(x509.oid.ExtendedKeyUsageOID.CLIENT_AUTH)
+                    if k2 == 'use_server_authentication':
+                        usage_oids.append(x509.oid.ExtendedKeyUsageOID.SERVER_AUTH)
+                    if k2 == 'FIXME: No code signing in UI?':
+                        # FIXME: No code signing in UI?
+                        usage_oids.append(x509.oid.ExtendedKeyUsageOID.CODE_SIGNING)
+                    if k2 == 'use_email':
+                        usage_oids.append(x509.oid.ExtendedKeyUsageOID.EMAIL_PROTECTION)
+                    if k2 == 'use_timestamping':
+                        usage_oids.append(x509.oid.ExtendedKeyUsageOID.TIME_STAMPING)
+                    if k2 == 'use_ocsp_signing':
+                        usage_oids.append(x509.oid.ExtendedKeyUsageOID.OCSP_SIGNING)
+                    # if k2 == 'use_eap_over_lan':
+                    #     usage_oids.append(x509.oid.ExtendedKeyUsageOID.OCSP_SIGNING)
+                    # if k2 == 'use_eap_over_ppp':
+                    #     usage_oids.append(x509.oid.ExtendedKeyUsageOID.OCSP_SIGNING)
+                builder = builder.add_extension(
+                    x509.ExtendedKeyUsage(usage_oids), critical=True
+                )
+            if k == 'authority_key_identifier':
+                pass
+                # FIXME: This must be handled in the signing part in the CA
+                # We don't know what authority will sign the CSR here
+                # for k2, v2 in v.items():
+                #     if k2 == 'use_key_identifier' and v2 == True:
+                #         builder = builder.add_extension(
+                #             x509.AuthorityKeyIdentifier()
+                #         )
+            if k == 'authority_identifier':
+                pass
+                # FIXME: This must be handled in the signing part in the CA
+                # We don't know what authority will sign the CSR here
+            if k == 'key_usage':
+                keyusages = {
+                    'digital_signature': False,
+                    'content_commitment': False,
+                    'key_encipherment': False,
+                    'data_encipherment': False,
+                    'key_agreement': False,
+                    'key_cert_sign': False,
+                    'crl_sign': False,
+                    'encipher_only': False,
+                    'decipher_only': False
+                }
+                #'use_data_encipherment': True}
+                for k2, v2 in v.items():
+                    if k2 == 'use_digital_signature':
+                        keyusages['digital_signature'] = v2
+                    if k2 == 'use_non_repudiation':
+                        keyusages['content_commitment'] = v2
+                    if k2 == 'use_key_encipherment':
+                        keyusages['key_encipherment'] = v2
+                    if k2 == 'use_data_encipherment':
+                        keyusages['data_encipherment'] = v2
+                    if k2 == '':
+                        # https://cryptography.io/en/latest/x509/reference/#x-509-extensions
+                        # This purpose is set to true when the subject public key is used for verifying signatures on public key certificates. If this purpose is set to true then ca must be true in the BasicConstraints extension.
+                        keyusages['key_cert_sign'] = True
+                    if k2 == 'use_crl_sign':
+                        keyusages['crl_sign'] = v2
+                    if k2 == 'use_encipher_only':
+                        keyusages['encipher_only'] = v2
+                        keyusages['key_agreement'] = True
+                    if k2 == 'use_decipher_only':
+                        keyusages['decipher_only'] = v2
+                        keyusages['key_agreement'] = True
+                    if k2 == '':
+                        keyusages[''] = v2
+                    if k2 == '':
+                        keyusages[''] = v2
+
+                builder = builder.add_extension(
+                    x509.KeyUsage(
+                        digital_signature=keyusages['digital_signature'],
+                        content_commitment=keyusages['content_commitment'],
+                        key_encipherment=keyusages['key_encipherment'],
+                        data_encipherment=keyusages['data_encipherment'],
+                        key_agreement=keyusages['key_agreement'],
+                        key_cert_sign=keyusages['key_cert_sign'],
+                        crl_sign=keyusages['crl_sign'],
+                        encipher_only=keyusages['encipher_only'],
+                        decipher_only=keyusages['decipher_only']
+                    ), critical=True
+                )
+            if k == 'subject_key_identifier':
+                for k2, v2 in v.items():
+                    if k2 == 'include_ski' and v2 == True:
+                        builder = builder.add_extension(
+                            x509.SubjectKeyIdentifier.from_public_key(private_key.public_key()),
+                            critical=False
+                        )
+            if k == 'certificate_info_access':
+                # FIXME: Need to come up with descriptions https://cryptography.io/en/latest/x509/reference/#cryptography.x509.AuthorityInformationAccess
+                descriptions = [
+                    x509.AccessDescription(x509.oid.AuthorityInformationAccessOID.OCSP, x509.UniformResourceIdentifier(u"http://FIXME")),
+                    x509.AccessDescription(x509.oid.AuthorityInformationAccessOID.CA_ISSUERS, x509.UniformResourceIdentifier(u"http://FIXME"))
+                ]
+                for k2, v2 in v.items():
+                    if k2 == 'include_aia' and v2 == True:
+                        builder = builder.add_extension(
+                            x509.AuthorityInformationAccess(descriptions),
+                            critical=False
+                        )
+
 
     # TODO support more CSR options, none of the authority plugins currently support these options
-    #    builder.add_extension(
-    #        x509.KeyUsage(
-    #            digital_signature=digital_signature,
-    #            content_commitment=content_commitment,
-    #            key_encipherment=key_enipherment,
-    #            data_encipherment=data_encipherment,
-    #            key_agreement=key_agreement,
-    #            key_cert_sign=key_cert_sign,
-    #            crl_sign=crl_sign,
-    #            encipher_only=enchipher_only,
-    #            decipher_only=decipher_only
-    #        ), critical=True
-    #    )
-    #
-    #    # we must maintain our own list of OIDs here
-    #    builder.add_extension(
-    #        x509.ExtendedKeyUsage(
-    #            server_authentication=server_authentication,
-    #            email=
-    #        )
-    #    )
-    #
-    #    builder.add_extension(
-    #        x509.AuthorityInformationAccess()
-    #    )
-    #
-    #    builder.add_extension(
-    #        x509.AuthorityKeyIdentifier()
-    #    )
-    #
-    #    builder.add_extension(
-    #        x509.SubjectKeyIdentifier()
-    #    )
     #
     #    builder.add_extension(
     #        x509.CRLDistributionPoints()

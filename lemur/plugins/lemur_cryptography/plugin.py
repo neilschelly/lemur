@@ -63,20 +63,28 @@ def build_root_certificate(options):
 
 
 def issue_certificate(csr, options):
+
+    """
+    options looks like:
+    2017-01-04 19:03:45,414 DEBUG: Issuing new cryptography certificate with options: <cryptography.hazmat.backends.openssl.x509._CertificateSigningRequest object at 0x7f5776648e50> {'replacements': [], 'description': u'testcert', 'roles': [], 'creator': u'lemur@nobody', 'country': u'US', 'owner': u'nschelly@dyn.com', 'authority': Authority(name=TestCA), 'validity_years': 1, 'validity_end': <Arrow [2018-01-04T19:03:45.343939+00:00]>, 'notifications': [Notification(label=DEFAULT_NSCHELLY_30_DAY), Notification(label=DEFAULT_NSCHELLY_15_DAY), Notification(label=DEFAULT_NSCHELLY_2_DAY), Notification(label=DEFAULT_SECURITY_30_DAY), Notification(label=DEFAULT_SECURITY_15_DAY), Notification(label=DEFAULT_SECURITY_2_DAY)], 'state': u'NH', 'organizational_unit': u'Engineering', 'location': u'Manchester', 'extensions': {'sub_alt_names': {'names': [{'name_type': u'DNSName', 'value': u'blah2'}]}, 'extended_key_usage': {'use_client_authentication': True, 'use_eap_over_lan': True, 'use_ocsp_signing': True, 'use_timestamping': True, 'use_server_authentication': True, 'use_eap_over_ppp': True}, 'authority_key_identifier': {'use_key_identifier': True}, 'basic_constraints': {}, 'custom': [], 'subject_key_identifier': {'include_ski': True}, 'certificate_info_access': {'include_aia': True}, 'key_usage': {'use_key_encipherment': True, 'use_non_repudiation': True, 'use_digital_signature': True, 'use_decipher_only': True, 'use_crl_sign': True, 'use_encipher_only': True, 'use_data_encipherment': True}, 'authority_identifier': {'use_authority_cert': True}}, 'validity_start': <Arrow [2017-01-04T19:03:45.343939+00:00]>, 'common_name': u'testcert', 'organization': u'Dynamic Network Services, Inc', 'name': u'testcert', 'destinations': []} [in /home/lemur/app/lemur/plugins/lemur_cryptography/plugin.py:113]
+    Use options like https://github.com/Netflix/lemur/blob/master/lemur/certificates/service.py#L335
+    Add to CSR like: https://cryptography.io/en/latest/x509/reference/#x-509-csr-certificate-signing-request-builder-object
+    """
+
     csr = x509.load_pem_x509_csr(csr, default_backend())
 
+    authority_certificate = x509.load_pem_x509_certificate(
+        str(options['authority'].authority_certificate.body),
+        default_backend()
+    )
+
     builder = x509.CertificateBuilder(
-        issuer_name=x509.Name([
-            x509.NameAttribute(
-                x509.OID_ORGANIZATION_NAME,
-                options['authority'].authority_certificate.issuer
-            )]
-        ),
+        issuer_name=authority_certificate.subject,
         subject_name=csr.subject,
         public_key=csr.public_key(),
         not_valid_before=options['validity_start'],
         not_valid_after=options['validity_end'],
-        extensions=csr.extensions)
+        extensions=csr.extensions._extensions)
 
     # TODO figure out a better way to increment serial
     builder = builder.serial_number(int(uuid.uuid4()))
