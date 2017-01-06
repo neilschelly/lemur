@@ -419,10 +419,6 @@ def create_csr(**csr_config):
                     if k2 == 'use_decipher_only':
                         keyusages['decipher_only'] = v2
                         keyusages['key_agreement'] = True
-                    if k2 == '':
-                        keyusages[''] = v2
-                    if k2 == '':
-                        keyusages[''] = v2
 
                 builder = builder.add_extension(
                     x509.KeyUsage(

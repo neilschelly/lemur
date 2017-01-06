@@ -57,7 +57,7 @@
           </div>
           <div class="checkbox">
             <label>
-              <input type="checkbox" ng-model="certificate.extensions.keyUsage.useKeyAgreement">Key Agreement
+              <input type="checkbox" ng-model="certificate.extensions.keyUsage.useKeyAgreement" ng-checked="certificate.extensions.keyUsage.useEncipherOnly||certificate.extensions.keyUsage.useDecipherOnly">Key Agreement
             </label>
           </div>
         </div>

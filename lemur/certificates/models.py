@@ -25,6 +25,8 @@ from lemur.utils import Vault
 from lemur.common import defaults
 from lemur.domains.models import Domain
 
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
 
 def get_or_increase_name(name):
     name = '-'.join(name.strip().split(' '))
@@ -160,6 +162,10 @@ class Certificate(db.Model):
         }
 
         return extensions
+
+    @property
+    def subject(self):
+        return x509.load_pem_x509_certificate(str(self.body),default_backend()).subject
 
     def get_arn(self, account_number):
         """

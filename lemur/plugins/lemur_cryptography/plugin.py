@@ -73,13 +73,8 @@ def issue_certificate(csr, options):
 
     csr = x509.load_pem_x509_csr(csr, default_backend())
 
-    authority_certificate = x509.load_pem_x509_certificate(
-        str(options['authority'].authority_certificate.body),
-        default_backend()
-    )
-
     builder = x509.CertificateBuilder(
-        issuer_name=authority_certificate.subject,
+        issuer_name=options['authority'].authority_certificate.subject,
         subject_name=csr.subject,
         public_key=csr.public_key(),
         not_valid_before=options['validity_start'],
