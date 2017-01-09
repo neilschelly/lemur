@@ -18,34 +18,30 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from lemur.plugins.bases import IssuerPlugin
 from lemur.plugins import lemur_cryptography as cryptography_issuer
+from lemur.certificates.service import create_csr
 
 
 def build_root_certificate(options):
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
+    options['certificate_authority'] = True
+    current_app.logger.debug("Issuing new cryptography root certificate with options: {0}".format(options))
 
-    subject = issuer = x509.Name([
-        x509.NameAttribute(x509.OID_COUNTRY_NAME, options['country']),
-        x509.NameAttribute(x509.OID_STATE_OR_PROVINCE_NAME, options['state']),
-        x509.NameAttribute(x509.OID_LOCALITY_NAME, options['location']),
-        x509.NameAttribute(x509.OID_ORGANIZATION_NAME, options['organization']),
-        x509.NameAttribute(x509.OID_ORGANIZATIONAL_UNIT_NAME, options['organizational_unit']),
-        x509.NameAttribute(x509.OID_COMMON_NAME, options['common_name'])
-    ])
+    csr, private_key = create_csr(**options)
+    csr = x509.load_pem_x509_csr(csr, default_backend())
 
     builder = x509.CertificateBuilder(
-        subject_name=subject,
-        issuer_name=issuer,
-        public_key=private_key.public_key(),
-        not_valid_after=options['validity_end'],
+        issuer_name=csr.subject,
+        subject_name=csr.subject,
+        public_key=csr.public_key(),
         not_valid_before=options['validity_start'],
-        serial_number=options['first_serial']
-    )
+        not_valid_after=options['validity_end'],
+        serial_number=options['serial_number'],
+        extensions=csr.extensions._extensions)
 
-    builder.add_extension(x509.SubjectAlternativeName([x509.DNSName(options['common_name'])]), critical=False)
+    private_key = serialization.load_pem_private_key(
+        bytes(str(private_key).encode('utf-8')),
+        password=None,
+        backend=default_backend()
+    )
 
     cert = builder.sign(private_key, hashes.SHA256(), default_backend())
 

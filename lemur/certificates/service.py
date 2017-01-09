@@ -333,9 +333,14 @@ def create_csr(**csr_config):
         x509.NameAttribute(x509.OID_EMAIL_ADDRESS, csr_config['owner'])
     ]))
 
-    builder = builder.add_extension(
-        x509.BasicConstraints(ca=False, path_length=None), critical=True,
-    )
+    if csr_config.get('certificate_authority', False) == False:
+        builder = builder.add_extension(
+            x509.BasicConstraints(ca=False, path_length=None), critical=True,
+        )
+    else:
+        builder = builder.add_extension(
+            x509.BasicConstraints(ca=True, path_length=None), critical=True,
+        )
 
     if csr_config.get('extensions'):
         for k, v in csr_config.get('extensions', {}).items():
