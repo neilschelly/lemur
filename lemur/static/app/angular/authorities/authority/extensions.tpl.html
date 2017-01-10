@@ -92,23 +92,33 @@
           <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useServerAuthentication">Server Authentication
         </label>
       </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useClientAuthentication">Client Authentication
+            </label>
+          </div>
       <div class="checkbox">
         <label>
-          <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useEmail">Email
+          <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useEmailProtection">Email Protection
         </label>
       </div>
       <div class="checkbox">
         <label>
           <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useTimestamping">Timestamping
         </label>
-        <div class="checkbox">
-          <label>
-            <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useEapOverLAN">EAP Over LAN
-          </label>
-        </div>
+      </div>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useCodeSigning">Code Signing
+        </label>
       </div>
     </div>
     <div class="col-sm-3">
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useEapOverLAN">EAP Over LAN
+        </label>
+      </div>
       <div class="checkbox">
         <label>
           <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useEapOverPPP">EAP Over PPP
@@ -116,7 +126,7 @@
       </div>
       <div class="checkbox">
         <label>
-          <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useSmartCardLogon">Smartcard Logon
+          <input type="checkbox" ng-model="authority.extensions.extendedKeyUsage.useSmartCardLogon">Smart Card Logon
         </label>
       </div>
       <div class="checkbox">

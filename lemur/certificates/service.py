@@ -361,19 +361,18 @@ def create_csr(**csr_config):
                         usage_oids.append(x509.oid.ExtendedKeyUsageOID.CLIENT_AUTH)
                     if k2 == 'use_server_authentication':
                         usage_oids.append(x509.oid.ExtendedKeyUsageOID.SERVER_AUTH)
-                    if k2 == 'FIXME: No code signing in UI?':
-                        # FIXME: No code signing in UI?
+                    if k2 == 'use_code_signing':
                         usage_oids.append(x509.oid.ExtendedKeyUsageOID.CODE_SIGNING)
-                    if k2 == 'use_email':
+                    if k2 == 'use_email_protection':
                         usage_oids.append(x509.oid.ExtendedKeyUsageOID.EMAIL_PROTECTION)
                     if k2 == 'use_timestamping':
                         usage_oids.append(x509.oid.ExtendedKeyUsageOID.TIME_STAMPING)
                     if k2 == 'use_ocsp_signing':
                         usage_oids.append(x509.oid.ExtendedKeyUsageOID.OCSP_SIGNING)
-                    # if k2 == 'use_eap_over_lan':
-                    #     usage_oids.append(x509.oid.ExtendedKeyUsageOID.OCSP_SIGNING)
-                    # if k2 == 'use_eap_over_ppp':
-                    #     usage_oids.append(x509.oid.ExtendedKeyUsageOID.OCSP_SIGNING)
+                    if k2 == 'use_eap_over_lan':
+                        usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.5.5.7.3.9.14"))
+                    if k2 == 'use_eap_over_ppp':
+                        usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.5.5.7.3.9.13"))
                 builder = builder.add_extension(
                     x509.ExtendedKeyUsage(usage_oids), critical=True
                 )
@@ -402,7 +401,6 @@ def create_csr(**csr_config):
                     'encipher_only': False,
                     'decipher_only': False
                 }
-                #'use_data_encipherment': True}
                 for k2, v2 in v.items():
                     if k2 == 'use_digital_signature':
                         keyusages['digital_signature'] = v2
@@ -412,9 +410,7 @@ def create_csr(**csr_config):
                         keyusages['key_encipherment'] = v2
                     if k2 == 'use_data_encipherment':
                         keyusages['data_encipherment'] = v2
-                    if k2 == '':
-                        # https://cryptography.io/en/latest/x509/reference/#x-509-extensions
-                        # This purpose is set to true when the subject public key is used for verifying signatures on public key certificates. If this purpose is set to true then ca must be true in the BasicConstraints extension.
+                    if k2 == 'use_key_cert_sign':
                         keyusages['key_cert_sign'] = True
                     if k2 == 'use_crl_sign':
                         keyusages['crl_sign'] = v2
