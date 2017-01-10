@@ -21,15 +21,25 @@ from lemur.plugins import lemur_cryptography as cryptography_issuer
 from lemur.certificates.service import create_csr
 
 
-def build_root_certificate(options):
+def build_certificate_authority(options):
     options['certificate_authority'] = True
     current_app.logger.debug("Issuing new cryptography root certificate with options: {0}".format(options))
 
     csr, private_key = create_csr(**options)
     csr = x509.load_pem_x509_csr(csr, default_backend())
 
+    # assume self-signed root certificate if no parent
+    if options.get("parent"):
+        issuer_subject = options['parent'].authority_certificate.subject
+        issuer_private_key = options['parent'].authority_certificate.private_key
+        chain_cert_pem = options['parent'].authority_certificate.body
+    else:
+        issuer_subject = csr.subject
+        issuer_private_key = private_key
+        chain_cert_pem = ""
+
     builder = x509.CertificateBuilder(
-        issuer_name=csr.subject,
+        issuer_name=issuer_subject,
         subject_name=csr.subject,
         public_key=csr.public_key(),
         not_valid_before=options['validity_start'],
@@ -38,7 +48,7 @@ def build_root_certificate(options):
         extensions=csr.extensions._extensions)
 
     private_key = serialization.load_pem_private_key(
-        bytes(str(private_key).encode('utf-8')),
+        bytes(str(issuer_private_key).encode('utf-8')),
         password=None,
         backend=default_backend()
     )
@@ -55,7 +65,7 @@ def build_root_certificate(options):
         encryption_algorithm=serialization.NoEncryption()
     )
 
-    return cert_pem, private_key_pem
+    return cert_pem, private_key_pem, chain_cert_pem
 
 
 def issue_certificate(csr, options):
@@ -124,9 +134,9 @@ class CryptographyIssuerPlugin(IssuerPlugin):
         :return:
         """
         current_app.logger.debug("Issuing new cryptography authority with options: {0}".format(options))
-        cert, private_key = build_root_certificate(options)
+        cert, private_key, chain_cert_pem = build_certificate_authority(options)
         roles = [
             {'username': '', 'password': '', 'name': options['name'] + '_admin'},
             {'username': '', 'password': '', 'name': options['name'] + '_operator'}
         ]
-        return cert, private_key, "", roles
+        return cert, private_key, chain_cert_pem, roles
