@@ -370,9 +370,9 @@ def create_csr(**csr_config):
                     if k2 == 'use_ocsp_signing':
                         usage_oids.append(x509.oid.ExtendedKeyUsageOID.OCSP_SIGNING)
                     if k2 == 'use_eap_over_lan':
-                        usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.5.5.7.3.9.14"))
+                        usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.5.5.7.3.14"))
                     if k2 == 'use_eap_over_ppp':
-                        usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.5.5.7.3.9.13"))
+                        usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.5.5.7.3.13"))
                 builder = builder.add_extension(
                     x509.ExtendedKeyUsage(usage_oids), critical=True
                 )

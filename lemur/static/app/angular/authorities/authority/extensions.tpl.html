@@ -55,19 +55,19 @@
       </div>
       <div class="checkbox">
         <label>
-          <input type="checkbox" ng-model="authority.extensions.keyUsage.useKeyAgreement" ng-checked="authority.extensions.keyUsage.useEncipherOnly||authority.extensions.keyUsage.useDecipherOnly">Key Agreement
+          <input type="checkbox" ng-model="authority.extensions.keyUsage.useKeyCertSign">Key Certificate Signature
         </label>
       </div>
     </div>
     <div class="col-sm-3">
       <div class="checkbox">
         <label>
-          <input type="checkbox" ng-model="authority.extensions.keyUsage.useKeyCertSign">Key Certificate Signature
+          <input type="checkbox" ng-model="authority.extensions.keyUsage.useCRLSign">CRL Sign
         </label>
       </div>
       <div class="checkbox">
         <label>
-          <input type="checkbox" ng-model="authority.extensions.keyUsage.useCRLSign">CRL Sign
+          <input type="checkbox" ng-model="authority.extensions.keyUsage.useKeyAgreement" ng-checked="authority.extensions.keyUsage.useEncipherOnly||authority.extensions.keyUsage.useDecipherOnly">Key Agreement
         </label>
       </div>
       <div class="checkbox">
