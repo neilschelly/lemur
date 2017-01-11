@@ -372,6 +372,8 @@ def create_csr(**csr_config):
                         usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.5.5.7.3.14"))
                     if k2 == 'use_eap_over_ppp':
                         usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.5.5.7.3.13"))
+                    if k2 == 'use_smart_card_logon':
+                        usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.4.1.311.20.2.2"))
                 builder = builder.add_extension(
                     x509.ExtendedKeyUsage(usage_oids), critical=False
                 )
@@ -429,6 +431,7 @@ def create_csr(**csr_config):
                         )
             if k == 'custom':
                 for custom_extension in v:
+                    pass
                     # FIXME: Cannot use critical on custom OIDs.
                     # An x509 implementation (python cryptography here) has to raise an error upon
                     # handling a critical extension it doesn't natively recognize/support. So, the
@@ -442,7 +445,6 @@ def create_csr(**csr_config):
                     #         value=custom['value']
                     #     )
                     # )
-
             if k == 'certificate_info_access':
                 # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
                 pass
@@ -455,17 +457,6 @@ def create_csr(**csr_config):
             if k == 'crl_distribution_points':
                 # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
                 pass
-
-
-    # TODO support more CSR options, none of the authority plugins currently support these options
-    #
-    #    builder.add_extension(
-    #        x509.CRLDistributionPoints()
-    #    )
-    #
-    #    builder.add_extension(
-    #        x509.ObjectIdentifier(oid)
-    #    )
 
     request = builder.sign(
         private_key, hashes.SHA256(), default_backend()
