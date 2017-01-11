@@ -167,6 +167,10 @@ class Certificate(db.Model):
     def subject(self):
         return x509.load_pem_x509_certificate(str(self.body),default_backend()).subject
 
+    @property
+    def public_key(self):
+        return x509.load_pem_x509_certificate(str(self.body),default_backend()).public_key()
+
     def get_arn(self, account_number):
         """
         Generate a valid AWS IAM arn
