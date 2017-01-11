@@ -169,14 +169,9 @@ class BaseExtensionSchema(LemurSchema):
 class BasicConstraintsSchema(BaseExtensionSchema):
     pass
 
-
-class AuthorityIdentifierSchema(BaseExtensionSchema):
-    use_authority_cert = fields.Boolean()
-
-
 class AuthorityKeyIdentifierSchema(BaseExtensionSchema):
     use_key_identifier = fields.Boolean()
-
+    use_authority_cert = fields.Boolean()
 
 class CertificateInfoAccessSchema(BaseExtensionSchema):
     include_aia = fields.Boolean()
@@ -244,7 +239,6 @@ class ExtensionSchema(BaseExtensionSchema):
     extended_key_usage = fields.Nested(ExtendedKeyUsageSchema)
     subject_key_identifier = fields.Nested(SubjectKeyIdentifierSchema)
     sub_alt_names = fields.Nested(SubAltNamesSchema)
-    authority_identifier = fields.Nested(AuthorityIdentifierSchema)
     authority_key_identifier = fields.Nested(AuthorityKeyIdentifierSchema)
     certificate_info_access = fields.Nested(CertificateInfoAccessSchema)
     custom = fields.List(fields.Nested(CustomOIDSchema))
