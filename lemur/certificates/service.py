@@ -376,12 +376,6 @@ def create_csr(**csr_config):
                 builder = builder.add_extension(
                     x509.ExtendedKeyUsage(usage_oids), critical=False
                 )
-            if k == 'authority_key_identifier':
-                # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
-                pass
-            if k == 'authority_identifier':
-                # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
-                pass
             if k == 'key_usage':
                 keyusages = {
                     'digital_signature': False,
@@ -435,17 +429,17 @@ def create_csr(**csr_config):
                             critical=False
                         )
             if k == 'certificate_info_access':
-                # FIXME: Need to come up with descriptions https://cryptography.io/en/latest/x509/reference/#cryptography.x509.AuthorityInformationAccess
-                descriptions = [
-                    x509.AccessDescription(x509.oid.AuthorityInformationAccessOID.OCSP, x509.UniformResourceIdentifier(u"http://FIXME")),
-                    x509.AccessDescription(x509.oid.AuthorityInformationAccessOID.CA_ISSUERS, x509.UniformResourceIdentifier(u"http://FIXME"))
-                ]
-                for k2, v2 in v.items():
-                    if k2 == 'include_aia' and v2 == True:
-                        builder = builder.add_extension(
-                            x509.AuthorityInformationAccess(descriptions),
-                            critical=False
-                        )
+                # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
+                pass
+            if k == 'authority_key_identifier':
+                # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
+                pass
+            if k == 'authority_identifier':
+                # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
+                pass
+            if k == 'crl_distribution_points':
+                # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
+                pass
 
 
     # TODO support more CSR options, none of the authority plugins currently support these options

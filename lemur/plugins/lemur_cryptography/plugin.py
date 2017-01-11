@@ -79,6 +79,22 @@ def build_certificate_authority(options):
             elif authority_identifier:
                 aki = x509.AuthorityKeyIdentifier(None, [x509.DirectoryName(authority_key_identifier_issuer)], authority_key_identifier_serial)
             builder = builder.add_extension(aki, critical=False)
+        if k = 'certificate_info_access':
+            # FIXME: Implement the AuthorityInformationAccess extension
+            # descriptions = [
+            #     x509.AccessDescription(x509.oid.AuthorityInformationAccessOID.OCSP, x509.UniformResourceIdentifier(u"http://FIXME")),
+            #     x509.AccessDescription(x509.oid.AuthorityInformationAccessOID.CA_ISSUERS, x509.UniformResourceIdentifier(u"http://FIXME"))
+            # ]
+            # for k2, v2 in v.items():
+            #     if k2 == 'include_aia' and v2 == True:
+            #         builder = builder.add_extension(
+            #             x509.AuthorityInformationAccess(descriptions),
+            #             critical=False
+            #         )
+            pass
+        if k = 'crl_distribution_points':
+            # FIXME: Implement the CRLDistributionPoints extension
+            # FIXME: Not implemented in lemur/schemas.py yet
 
     private_key = serialization.load_pem_private_key(
         bytes(str(issuer_private_key).encode('utf-8')),

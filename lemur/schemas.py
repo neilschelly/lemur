@@ -241,6 +241,7 @@ class ExtensionSchema(BaseExtensionSchema):
     sub_alt_names = fields.Nested(SubAltNamesSchema)
     authority_key_identifier = fields.Nested(AuthorityKeyIdentifierSchema)
     certificate_info_access = fields.Nested(CertificateInfoAccessSchema)
+    # FIXME: crl_distribution_points = not implemented
     custom = fields.List(fields.Nested(CustomOIDSchema))
 
 
