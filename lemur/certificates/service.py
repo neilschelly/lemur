@@ -28,7 +28,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-
 def get(cert_id):
     """
     Retrieves certificate by it's ID.
@@ -428,6 +427,22 @@ def create_csr(**csr_config):
                             x509.SubjectKeyIdentifier.from_public_key(private_key.public_key()),
                             critical=False
                         )
+            if k == 'custom':
+                for custom_extension in v:
+                    # FIXME: Cannot use critical on custom OIDs.
+                    # An x509 implementation (python cryptography here) has to raise an error upon
+                    # handling a critical extension it doesn't natively recognize/support. So, the
+                    # x509.UnrecognizedExtension type inherently cannot support critical extensions.
+                    # At this point, `custom_extension` will look like:
+                    # {'oid': u'1.3.6.1.5.5.7.3.25', 'value': u'blah', 'is_critical': True, 'encoding': u'string'},
+                    # Value should also be DER encoded. Unsure how to handle that.
+                    # builder = builder.add_extension(
+                    #     x509.UnrecognizedExtension(
+                    #         oid=custom['oid'],
+                    #         value=custom['value']
+                    #     )
+                    # )
+
             if k == 'certificate_info_access':
                 # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
                 pass
