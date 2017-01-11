@@ -34,13 +34,15 @@ def build_certificate_authority(options):
         issuer_private_key = options['parent'].authority_certificate.private_key
         chain_cert_pem = options['parent'].authority_certificate.body
         authority_key_identifier_public = options['parent'].authority_certificate.public_key
-        authority_key_identifier_issuer = options['parent'].authority_certificate.issuer
-        authority_key_identifier_serial = options['parent'].authority_certificate.serial
+        authority_key_identifier_subject = x509.SubjectKeyIdentifier.from_public_key(authority_key_identifier_public)
+        authority_key_identifier_issuer = issuer_subject
+        authority_key_identifier_serial = int(options['parent'].authority_certificate.serial)
     else:
         issuer_subject = csr.subject
         issuer_private_key = private_key
         chain_cert_pem = ""
-        authority_key_identifier_public = csr.public_key
+        authority_key_identifier_public = csr.public_key()
+        authority_key_identifier_subject = None
         authority_key_identifier_issuer = csr.subject
         authority_key_identifier_serial = options['serial_number']
 
@@ -62,17 +64,21 @@ def build_certificate_authority(options):
                     authority_key_identifier = True
                 if k2 == 'use_authority_cert' and v2 == True:
                     authority_identifier = True
+            if authority_key_identifier:
+                if authority_key_identifier_subject:
+                    # FIXME in python-cryptography.
+                    # from_issuer_subject_key_identifier(cls, ski) is looking for ski.value.digest
+                    # but the digest of the ski is at just ski.digest. Until that library is fixed,
+                    # this function won't work. The second line has the same result.
+                    # aki = x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(authority_key_identifier_subject)
+                    aki = x509.AuthorityKeyIdentifier(authority_key_identifier_subject.digest, None, None)
+                else:
+                    aki = x509.AuthorityKeyIdentifier.from_issuer_public_key(authority_key_identifier_public)    
             if authority_key_identifier and authority_identifier:
-                aki = x509.AuthorityKeyIdentifier.from_issuer_public_key(authority_key_identifier_public)
-                aki.authority_cert_issuer = authority_key_identifier_issuer
-                aki.authority_cert_serial = authority_key_identifier_serial
-                builder = builder.add_extension(aki)
-            elif authority_key_identifier:
-                aki = x509.AuthorityKeyIdentifier.from_issuer_public_key(authority_key_identifier_public)
-                builder = builder.add_extension(aki)
+                aki = x509.AuthorityKeyIdentifier(aki.key_identifier, [x509.DirectoryName(authority_key_identifier_issuer)], authority_key_identifier_serial)
             elif authority_identifier:
-                aki = x509.AuthorityKeyIdentifier(None, authority_key_identifier_issuer, authority_key_identifier_serial)
-                builder = builder.add_extension(aki)
+                aki = x509.AuthorityKeyIdentifier(None, [x509.DirectoryName(authority_key_identifier_issuer)], authority_key_identifier_serial)
+            builder = builder.add_extension(aki, critical=False)
 
     private_key = serialization.load_pem_private_key(
         bytes(str(issuer_private_key).encode('utf-8')),

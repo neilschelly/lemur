@@ -374,7 +374,7 @@ def create_csr(**csr_config):
                     if k2 == 'use_eap_over_ppp':
                         usage_oids.append(x509.oid.ObjectIdentifier("1.3.6.1.5.5.7.3.13"))
                 builder = builder.add_extension(
-                    x509.ExtendedKeyUsage(usage_oids), critical=True
+                    x509.ExtendedKeyUsage(usage_oids), critical=False
                 )
             if k == 'authority_key_identifier':
                 # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
@@ -404,14 +404,14 @@ def create_csr(**csr_config):
                     if k2 == 'use_data_encipherment':
                         keyusages['data_encipherment'] = v2
                     if k2 == 'use_key_cert_sign':
-                        keyusages['key_cert_sign'] = True
+                        keyusages['key_cert_sign'] = v2
                     if k2 == 'use_crl_sign':
                         keyusages['crl_sign'] = v2
-                    if k2 == 'use_encipher_only':
-                        keyusages['encipher_only'] = v2
+                    if k2 == 'use_encipher_only' and v2 == True:
+                        keyusages['encipher_only'] = True
                         keyusages['key_agreement'] = True
-                    if k2 == 'use_decipher_only':
-                        keyusages['decipher_only'] = v2
+                    if k2 == 'use_decipher_only' and v2 == True:
+                        keyusages['decipher_only'] = True
                         keyusages['key_agreement'] = True
 
                 builder = builder.add_extension(
