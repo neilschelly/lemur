@@ -231,6 +231,7 @@ class CustomOIDSchema(BaseExtensionSchema):
     oid = fields.String()
     encoding = fields.String(validate=validators.encoding)
     value = fields.String()
+    is_critical = fields.Boolean()
 
 
 class ExtensionSchema(BaseExtensionSchema):
