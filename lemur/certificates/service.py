@@ -350,10 +350,10 @@ def create_csr(**csr_config):
                 for name in v['names']:
                     if name['name_type'] == 'DNSName':
                         general_names.append(x509.DNSName(name['value']))
-
-                builder = builder.add_extension(
-                    x509.SubjectAlternativeName(general_names), critical=True
-                )
+                if general_names:
+                    builder = builder.add_extension(
+                        x509.SubjectAlternativeName(general_names), critical=True
+                    )
             if k == 'extended_key_usage':
                 usage_oids = []
                 for k2, v2 in v.items():
@@ -377,18 +377,11 @@ def create_csr(**csr_config):
                     x509.ExtendedKeyUsage(usage_oids), critical=True
                 )
             if k == 'authority_key_identifier':
+                # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
                 pass
-                # FIXME: This must be handled in the signing part in the CA
-                # We don't know what authority will sign the CSR here
-                # for k2, v2 in v.items():
-                #     if k2 == 'use_key_identifier' and v2 == True:
-                #         builder = builder.add_extension(
-                #             x509.AuthorityKeyIdentifier()
-                #         )
             if k == 'authority_identifier':
+                # This isn't handled here. The CSR will be signed by a CA that will have to handle this.
                 pass
-                # FIXME: This must be handled in the signing part in the CA
-                # We don't know what authority will sign the CSR here
             if k == 'key_usage':
                 keyusages = {
                     'digital_signature': False,

@@ -33,10 +33,16 @@ def build_certificate_authority(options):
         issuer_subject = options['parent'].authority_certificate.subject
         issuer_private_key = options['parent'].authority_certificate.private_key
         chain_cert_pem = options['parent'].authority_certificate.body
+        authority_key_identifier_public = options['parent'].authority_certificate.public_key
+        authority_key_identifier_issuer = options['parent'].authority_certificate.issuer
+        authority_key_identifier_serial = options['parent'].authority_certificate.serial
     else:
         issuer_subject = csr.subject
         issuer_private_key = private_key
         chain_cert_pem = ""
+        authority_key_identifier_public = csr.public_key
+        authority_key_identifier_issuer = csr.subject
+        authority_key_identifier_serial = options['serial_number']
 
     builder = x509.CertificateBuilder(
         issuer_name=issuer_subject,
@@ -46,6 +52,27 @@ def build_certificate_authority(options):
         not_valid_after=options['validity_end'],
         serial_number=options['serial_number'],
         extensions=csr.extensions._extensions)
+
+    for k, v in options.get('extensions', {}).items():
+        if k == 'authority_key_identifier':
+            # One or both of these options may be present inside the aki extension
+            (authority_key_identifier, authority_identifier) = (False, False)
+            for k2, v2 in v.items():
+                if k2 == 'use_key_identifier' and v2 == True:
+                    authority_key_identifier = True
+                if k2 == 'use_authority_cert' and v2 == True:
+                    authority_identifier = True
+            if authority_key_identifier and authority_identifier:
+                aki = x509.AuthorityKeyIdentifier.from_issuer_public_key(authority_key_identifier_public)
+                aki.authority_cert_issuer = authority_key_identifier_issuer
+                aki.authority_cert_serial = authority_key_identifier_serial
+                builder = builder.add_extension(aki)
+            elif authority_key_identifier:
+                aki = x509.AuthorityKeyIdentifier.from_issuer_public_key(authority_key_identifier_public)
+                builder = builder.add_extension(aki)
+            elif authority_identifier:
+                aki = x509.AuthorityKeyIdentifier(None, authority_key_identifier_issuer, authority_key_identifier_serial)
+                builder = builder.add_extension(aki)
 
     private_key = serialization.load_pem_private_key(
         bytes(str(issuer_private_key).encode('utf-8')),
