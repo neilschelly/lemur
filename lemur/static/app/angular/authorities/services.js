@@ -112,6 +112,9 @@ angular.module('lemur')
         authority.organization = defaults.organization;
         authority.organizationalUnit = defaults.organizationalUnit;
         authority.defaultIssuerPlugin = defaults.issuerPlugin;
+        authority.extensions.keyUsage.useKeyCertSign = true;
+        authority.extensions.keyUsage.useCRLSign = true;
+        
       });
     };
 
