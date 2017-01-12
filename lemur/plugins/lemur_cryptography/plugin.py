@@ -23,24 +23,19 @@ from lemur.certificates.service import create_csr
 
 def build_certificate_authority(options):
     options['certificate_authority'] = True
-    current_app.logger.debug("Issuing new cryptography root certificate with options: {0}".format(options))
 
     csr, private_key = create_csr(**options)
-    cert_pem = issue_certificate(csr, options)
-    private_key_pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.TraditionalOpenSSL,  # would like to use PKCS8 but AWS ELBs don't like it
-        encryption_algorithm=serialization.NoEncryption()
-    )
+    cert_pem, chain_cert_pem = issue_certificate(csr, options, private_key)
 
-    return cert_pem, private_key_pem, chain_cert_pem
+    return cert_pem, private_key, chain_cert_pem
 
 
-def issue_certificate(csr, options):
+def issue_certificate(csr, options, private_key = None):
     csr = x509.load_pem_x509_csr(csr, default_backend())
 
-    # assume self-signed root certificate if no parent
+    # FIXME: I don't like this duplication of code. Signing an authority and a certificate use different options to specify the signing authority, but that would be an API change to resolve more cleanly.
     if options.get("parent"):
+        # authorities will store this in options['parent']
         issuer_subject = options['parent'].authority_certificate.subject
         issuer_private_key = options['parent'].authority_certificate.private_key
         chain_cert_pem = options['parent'].authority_certificate.body
@@ -48,6 +43,18 @@ def issue_certificate(csr, options):
         authority_key_identifier_subject = x509.SubjectKeyIdentifier.from_public_key(authority_key_identifier_public)
         authority_key_identifier_issuer = issuer_subject
         authority_key_identifier_serial = int(options['parent'].authority_certificate.serial)
+        serial = options['serial_number']
+    elif options.get("authority"):
+        # certificates will store this in options['authority']
+        issuer_subject = options['authority'].authority_certificate.subject
+        issuer_private_key = options['authority'].authority_certificate.private_key
+        chain_cert_pem = options['authority'].authority_certificate.body
+        authority_key_identifier_public = options['authority'].authority_certificate.public_key
+        authority_key_identifier_subject = x509.SubjectKeyIdentifier.from_public_key(authority_key_identifier_public)
+        authority_key_identifier_issuer = issuer_subject
+        authority_key_identifier_serial = int(options['authority'].authority_certificate.serial)
+        # TODO figure out a better way to increment serial
+        serial = int(uuid.uuid4())
     else:
         issuer_subject = csr.subject
         issuer_private_key = private_key
@@ -56,6 +63,8 @@ def issue_certificate(csr, options):
         authority_key_identifier_subject = None
         authority_key_identifier_issuer = csr.subject
         authority_key_identifier_serial = options['serial_number']
+        # TODO figure out a better way to increment serial
+        serial = int(uuid.uuid4())
 
     builder = x509.CertificateBuilder(
         issuer_name=issuer_subject,
@@ -63,7 +72,7 @@ def issue_certificate(csr, options):
         public_key=csr.public_key(),
         not_valid_before=options['validity_start'],
         not_valid_after=options['validity_end'],
-        serial_number=options['serial_number'],
+        serial_number=serial,
         extensions=csr.extensions._extensions)
 
     for k, v in options.get('extensions', {}).items():
@@ -113,9 +122,9 @@ def issue_certificate(csr, options):
         password=None,
         backend=default_backend()
     )
+
     
-    # TODO figure out a better way to increment serial
-    builder = builder.serial_number(int(uuid.uuid4()))
+
     cert = builder.sign(private_key, hashes.SHA256(), default_backend())
     cert_pem = cert.public_bytes(
         encoding=serialization.Encoding.PEM
@@ -154,7 +163,7 @@ class CryptographyIssuerPlugin(IssuerPlugin):
         :param options:
         :return:
         """
-        current_app.logger.debug("Issuing new cryptography authority with options: {0}".format(options))
+        current_app.logger.debug("Creating new cryptography certification authority with options: {0}".format(options))
         cert, private_key, chain_cert_pem = build_certificate_authority(options)
         roles = [
             {'username': '', 'password': '', 'name': options['name'] + '_admin'},
