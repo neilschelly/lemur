@@ -114,7 +114,6 @@ angular.module('lemur')
         authority.defaultIssuerPlugin = defaults.issuerPlugin;
         authority.extensions.keyUsage.useKeyCertSign = true;
         authority.extensions.keyUsage.useCRLSign = true;
-        
       });
     };
 
