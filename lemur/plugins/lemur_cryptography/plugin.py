@@ -163,7 +163,7 @@ class CryptographyIssuerPlugin(IssuerPlugin):
         :param options:
         :return:
         """
-        current_app.logger.debug("Creating new cryptography certification authority with options: {0}".format(options))
+        current_app.logger.debug("Issuing new cryptography authority with options: {0}".format(options))
         cert, private_key, chain_cert_pem = build_certificate_authority(options)
         roles = [
             {'username': '', 'password': '', 'name': options['name'] + '_admin'},
